@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HotelScrape Pro — Hotel Data Extraction Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --ink:      #0a0a0f;
+    --paper:    #f8f5f0;
+    --cream:    #f0ebe2;
+    --gold:     #c9a84c;
+    --gold-lt:  #e8d5a3;
+    --amber:    #d4722a;
+    --teal:     #1a6b6b;
+    --teal-lt:  #e8f4f4;
+    --muted:    #6b6560;
+    --border:   #d8d0c4;
+    --white:    #ffffff;
+    --red:      #c0392b;
+    --green:    #1e7e5e;
+    --shadow:   0 4px 24px rgba(10,10,15,0.08);
+    --shadow-lg:0 12px 48px rgba(10,10,15,0.14);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  body{
+    font-family:'DM Sans',sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BG ── */
+  body::before{
+    content:'';
+    position:fixed;inset:0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.06) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(201,168,76,0.06) 1px,transparent 1px);
+    background-size:48px 48px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* ── HEADER ── */
+  header{
+    position:relative;z-index:10;
+    background:var(--ink);
+    color:var(--paper);
+    padding:0 40px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:3px solid var(--gold);
+  }
+  .logo-block{
+    padding:20px 0;
+  }
+  .logo-mark{
+    font-family:'DM Serif Display',serif;
+    font-size:26px;
+    letter-spacing:-0.5px;
+    color:var(--gold);
+    display:flex;align-items:center;gap:10px;
+    line-height:1;
+  }
+  .logo-mark span{color:var(--paper);}
+  .logo-sub{
+    font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--muted);margin-top:4px;font-weight:500;
+  }
+  .header-badge{
+    display:flex;gap:10px;
+  }
+  .badge{
+    font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;
+    padding:5px 12px;border-radius:30px;
+    background:rgba(201,168,76,0.12);color:var(--gold);
+    border:1px solid rgba(201,168,76,0.3);
+  }
+  .badge.teal{background:rgba(26,107,107,0.2);color:#4ecdc4;border-color:rgba(78,205,196,0.3);}
+
+  /* ── MAIN CONTAINER ── */
+  main{
+    position:relative;z-index:1;
+    max-width:1280px;margin:0 auto;
+    padding:40px 32px 80px;
+  }
+
+  /* ── HERO ── */
+  .hero{
+    display:grid;grid-template-columns:1fr auto;align-items:center;
+    gap:24px;margin-bottom:40px;
+  }
+  .hero-title{
+    font-family:'DM Serif Display',serif;
+    font-size:clamp(32px,4vw,52px);
+    line-height:1.1;
+    color:var(--ink);
+  }
+  .hero-title em{
+    font-style:italic;color:var(--amber);
+  }
+  .hero-desc{
+    font-size:15px;color:var(--muted);margin-top:10px;max-width:480px;line-height:1.7;
+  }
+  .hero-stats{
+    display:flex;gap:24px;
+  }
+  .stat{text-align:center;}
+  .stat-num{
+    font-family:'DM Serif Display',serif;font-size:28px;color:var(--teal);
+  }
+  .stat-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+
+  /* ── CARD ── */
+  .card{
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:28px 32px;
+    box-shadow:var(--shadow);
+    margin-bottom:24px;
+  }
+  .card-title{
+    font-family:'DM Serif Display',serif;
+    font-size:20px;color:var(--ink);
+    margin-bottom:18px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .card-title::after{
+    content:'';flex:1;height:1px;background:var(--border);
+  }
+
+  /* ── INPUT GROUP ── */
+  .input-group{
+    display:flex;gap:12px;align-items:stretch;
+  }
+  .url-wrap{
+    flex:1;position:relative;
+  }
+  .url-icon{
+    position:absolute;left:16px;top:50%;transform:translateY(-50%);
+    color:var(--muted);font-size:18px;pointer-events:none;
+    font-family:'JetBrains Mono',monospace;font-size:14px;
+  }
+  .url-input{
+    width:100%;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13.5px;
+    padding:16px 16px 16px 52px;
+    border:2px solid var(--border);
+    border-radius:10px;
+    background:var(--cream);
+    color:var(--ink);
+    outline:none;
+    transition:all .2s;
+  }
+  .url-input:focus{
+    border-color:var(--gold);
+    background:var(--white);
+    box-shadow:0 0 0 3px rgba(201,168,76,0.15);
+  }
+  .url-input::placeholder{color:#b8b0a8;}
+
+  .btn{
+    font-family:'DM Sans',sans-serif;
+    font-weight:600;font-size:14px;
+    padding:0 28px;border:none;border-radius:10px;
+    cursor:pointer;letter-spacing:0.3px;
+    transition:all .18s;
+    display:inline-flex;align-items:center;gap:8px;
+    white-space:nowrap;
+  }
+  .btn-primary{
+    background:var(--ink);color:var(--gold);
+    box-shadow:0 2px 8px rgba(0,0,0,0.2);
+  }
+  .btn-primary:hover{background:#1e1e2a;transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-secondary{
+    background:var(--teal);color:var(--white);
+  }
+  .btn-secondary:hover{background:#155a5a;transform:translateY(-1px);}
+  .btn-ghost{
+    background:transparent;color:var(--teal);
+    border:2px solid var(--teal);
+  }
+  .btn-ghost:hover{background:var(--teal-lt);}
+  .btn-sm{padding:8px 18px;font-size:13px;}
+
+  /* ── SUPPORTED SITES ── */
+  .sites-row{
+    display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;
+  }
+  .site-chip{
+    font-size:11.5px;font-weight:600;letter-spacing:0.5px;
+    padding:5px 12px;border-radius:30px;
+    background:var(--cream);border:1px solid var(--border);color:var(--muted);
+    display:inline-flex;align-items:center;gap:5px;
+  }
+  .site-chip.active{background:var(--teal-lt);border-color:#9dd;color:var(--teal);}
+  .dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;}
+
+  /* ── LOADER ── */
+  #loader{display:none;margin:32px 0;text-align:center;}
+  .loader-ring{
+    display:inline-block;width:48px;height:48px;
+    border:4px solid var(--cream);
+    border-top-color:var(--gold);
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loader-text{
+    font-size:13px;color:var(--muted);margin-top:12px;
+    font-family:'JetBrains Mono',monospace;
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+  /* ── HOTEL INFO GRID ── */
+  #hotel-section{display:none;}
+  .hotel-header{
+    background:linear-gradient(135deg,var(--ink) 0%,#1a1a2e 100%);
+    color:var(--white);
+    border-radius:14px;
+    padding:28px 32px;
+    margin-bottom:20px;
+    display:flex;gap:28px;align-items:flex-start;
+    box-shadow:var(--shadow-lg);
+    border:1px solid rgba(201,168,76,0.2);
+  }
+  .hotel-icon{
+    font-size:48px;flex-shrink:0;
+    background:rgba(201,168,76,0.12);
+    border:1px solid rgba(201,168,76,0.25);
+    border-radius:12px;
+    width:72px;height:72px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .hotel-name{
+    font-family:'DM Serif Display',serif;
+    font-size:clamp(20px,3vw,30px);
+    color:var(--gold);line-height:1.2;
+  }
+  .hotel-meta{
+    display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;
+  }
+  .meta-pill{
+    font-size:12px;font-weight:500;letter-spacing:0.4px;
+    padding:4px 10px;border-radius:20px;
+    background:rgba(255,255,255,0.08);color:#ccc;
+    border:1px solid rgba(255,255,255,0.1);
+  }
+  .meta-pill.gold{background:rgba(201,168,76,0.15);color:var(--gold);}
+  .meta-pill.green{background:rgba(30,126,94,0.2);color:#5dd6a5;}
+
+  .info-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .info-item{
+    background:var(--cream);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:14px 16px;
+    transition:border-color .2s;
+  }
+  .info-item:hover{border-color:var(--gold);}
+  .info-label{
+    font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+    color:var(--muted);margin-bottom:5px;
+  }
+  .info-value{
+    font-size:13.5px;color:var(--ink);font-weight:500;
+    word-break:break-all;line-height:1.4;
+  }
+  .info-value a{color:var(--teal);text-decoration:none;}
+  .info-value a:hover{text-decoration:underline;}
+  .na{color:var(--muted);font-style:italic;font-size:12px;}
+
+  /* ── TABS ── */
+  .tabs{
+    display:flex;gap:0;border-bottom:2px solid var(--border);
+    margin-bottom:20px;
+  }
+  .tab{
+    font-size:13.5px;font-weight:600;letter-spacing:0.3px;
+    padding:10px 22px;cursor:pointer;
+    color:var(--muted);border-bottom:3px solid transparent;
+    margin-bottom:-2px;transition:all .15s;
+  }
+  .tab:hover{color:var(--ink);}
+  .tab.active{color:var(--teal);border-bottom-color:var(--teal);}
+
+  /* ── TABLE ── */
+  .table-wrap{
+    overflow-x:auto;border:1px solid var(--border);border-radius:12px;
+    box-shadow:var(--shadow);
+  }
+  table{
+    width:100%;border-collapse:collapse;font-size:13px;
+  }
+  thead{
+    background:var(--ink);
+    position:sticky;top:0;z-index:2;
+  }
+  thead th{
+    font-family:'DM Sans',sans-serif;
+    font-size:10.5px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;
+    color:var(--gold);
+    padding:13px 16px;text-align:left;
+    border-right:1px solid rgba(255,255,255,0.06);
+    white-space:nowrap;
+  }
+  thead th:last-child{border-right:none;}
+  tbody tr{
+    border-bottom:1px solid var(--border);
+    transition:background .15s;
+  }
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--cream);}
+  tbody td{
+    padding:12px 16px;color:var(--ink);
+    border-right:1px solid var(--border);
+    vertical-align:top;
+    max-width:280px;
+  }
+  tbody td:last-child{border-right:none;}
+  .score-badge{
+    display:inline-block;
+    font-size:12px;font-weight:700;
+    padding:3px 9px;border-radius:20px;
+    background:var(--teal-lt);color:var(--teal);
+    border:1px solid #9dd;
+  }
+  .review-text-cell{
+    font-size:12.5px;line-height:1.5;color:#3a3530;
+    max-height:64px;overflow:hidden;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+  }
+  .source-tag{
+    font-size:11px;font-weight:600;letter-spacing:0.5px;
+    padding:2px 8px;border-radius:10px;
+    background:var(--cream);border:1px solid var(--border);color:var(--muted);
+  }
+  .row-num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;color:#aaa;font-weight:400;
+  }
+
+  /* ── EXPORT BAR ── */
+  .export-bar{
+    display:flex;gap:12px;align-items:center;
+    flex-wrap:wrap;
+    padding:16px 20px;
+    background:var(--teal-lt);
+    border:1px solid #9dd;
+    border-radius:12px;
+    margin-top:20px;
+  }
+  .export-label{
+    font-size:13px;font-weight:600;color:var(--teal);flex:1;
+    min-width:160px;
+  }
+
+  /* ── STATUS STRIP ── */
+  .status-strip{
+    display:flex;gap:16px;align-items:center;
+    padding:10px 16px;
+    background:var(--ink);color:var(--paper);
+    border-radius:8px;margin-bottom:16px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+  }
+  .status-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--gold);
+    animation:blink 1.2s ease-in-out infinite;
+    flex-shrink:0;
+  }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+  .status-strip .count{
+    margin-left:auto;
+    color:var(--gold);font-weight:600;
+  }
+
+  /* ── ERROR ── */
+  .error-box{
+    background:#fff5f5;border:1px solid #fca5a5;border-radius:10px;
+    padding:16px 20px;color:var(--red);font-size:14px;
+    display:flex;gap:10px;align-items:flex-start;
+  }
+
+  /* ── FOOTER ── */
+  footer{
+    position:relative;z-index:1;
+    text-align:center;padding:20px;
+    font-size:12px;color:var(--muted);
+    border-top:1px solid var(--border);
+  }
+
+  /* ── ANIMATIONS ── */
+  .fade-in{animation:fadeIn .4s ease forwards;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  @media(max-width:640px){
+    main{padding:20px 16px 60px;}
+    .hero{grid-template-columns:1fr;}
+    .hero-stats{display:none;}
+    .input-group{flex-direction:column;}
+    .hotel-header{flex-direction:column;}
+    header{padding:0 16px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-block">
+    <div class="logo-mark">🏨 <span>HotelScrape</span> Pro</div>
+    <div class="logo-sub">Global Hotel Data Extraction Suite</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero" style="margin-top:10px;">
+    <div>
+      <h1 class="hero-title">Extract Hotel Data &<br><em>Guest Reviews</em> Instantly</h1>
+      <p class="hero-desc">Paste any hotel URL from Booking.com or TripAdvisor to pull structured data: hotel details, amenities, geo-coordinates, and up to 500 guest reviews — export-ready in CSV or Excel.</p>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">500+</div>
+        <div class="stat-label">Reviews/Hotel</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">18</div>
+        <div class="stat-label">Data Fields</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">2</div>
+        <div class="stat-label">Sources</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUT CARD -->
+  <div class="card fade-in">
+    <div class="card-title">🔗 Enter Hotel URL</div>
+
+    <div class="input-group">
+      <div class="url-wrap">
+        <!-- <span class="url-icon">https://</span> -->
+        <input
+          type="text"
+          id="url-input"
+          class="url-input"
+          placeholder="e.g. https://www.booking.com/hotel/gb/the-ritz-london.html"
+          autocomplete="off"
+        />
+      </div>
+      <button class="btn btn-primary" onclick="extractData()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Extract Data
+      </button>
+    </div>
+
+    <div class="sites-row">
+      <span style="font-size:12px;color:var(--muted);font-weight:600;letter-spacing:1px;text-transform:uppercase; margin-top: 6px;">Supported:</span>
+      <span class="site-chip active"><span class="dot"></span> Booking.com</span>
+    </div>
+  </div>
+
+  <!-- LOADER -->
+  <div id="loader">
+    <div class="loader-ring"></div>
+    <div class="loader-text">Scraping hotel data…</div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="error-box" class="error-box" style="display:none;margin-bottom:20px;">
+    <span style="font-size:18px;">⚠️</span>
+    <span id="error-msg"></span>
+  </div>
+
+  <!-- HOTEL SECTION -->
+  <div id="hotel-section" class="fade-in">
+
+    <!-- HOTEL HEADER -->
+    <div class="hotel-header" id="hotel-header-block">
+      <div class="hotel-icon">🏨</div>
+      <div style="flex:1;min-width:0;">
+        <div class="hotel-name" id="h-name">Hotel Name</div>
+        <div class="hotel-meta" id="hotel-meta-pills"></div>
+      </div>
+    </div>
+
+    <!-- STATUS STRIP -->
+    <div class="status-strip">
+      <div class="status-dot"></div>
+      <span>Data extracted from <strong id="s-source" style="color:var(--gold-lt);">—</strong></span>
+      <span class="count" id="s-reviews">0 reviews</span>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('details',this)">Hotel Details</div>
+      <!-- <div class="tab" onclick="switchTab('reviews',this)">Guest Reviews</div> -->
+    </div>
+
+    <!-- DETAILS TAB -->
+    <div id="tab-details">
+      <div class="info-grid" id="info-grid"></div>
+    </div>
+
+    <!-- REVIEWS TAB -->
+    <div id="tab-reviews" style="display:none;">
+      <div class="table-wrap">
+        <table id="reviews-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Reviewer</th>
+              <th>Date</th>
+              <th>Score</th>
+              <th>Review</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody id="reviews-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EXPORT BAR -->
+    <div class="export-bar">
+      <div class="export-label">📦 Ready to export <strong id="exp-count">0</strong> records</div>
+      <button class="btn btn-secondary btn-sm" onclick="exportData('csv')">
+        ⬇ Export CSV
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="exportData('excel')">
+        ⬇ Export Excel (.xlsx)
+      </button>
+    </div>
+
+  </div><!-- /hotel-section -->
+
+</main>
+
+<footer>
+  HotelScrape Pro &nbsp;·&nbsp; Built for global hotel data extraction &nbsp;·&nbsp; Booking.com & TripAdvisor compatible
+</footer>
+
+<script>
+let currentData = null;
+
+async function extractData() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) {
+    showError('Please enter a hotel URL to extract data.');
+    return;
+  }
+  if (!url.startsWith('http')) {
+    showError('Please enter a full URL starting with https://');
+    return;
+  }
+
+  hideError();
+  document.getElementById('hotel-section').style.display = 'none';
+  document.getElementById('loader').style.display = 'block';
+
+  try {
+    const res = await fetch('/extract', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+
+    if (data.error && !data.hotel) {
+      throw new Error(data.error);
+    }
+
+    currentData = data;
+    renderHotel(data.hotel, data.reviews);
+    document.getElementById('hotel-section').style.display = 'block';
+
+  } catch(e) {
+    showError('Extraction failed: ' + e.message + '. Try a valid Booking.com or TripAdvisor hotel URL.');
+  } finally {
+    document.getElementById('loader').style.display = 'none';
+  }
+}
+
+function renderHotel(hotel, reviews) {
+  // Header
+  document.getElementById('h-name').textContent = hotel.hotel_name || 'Unknown Hotel';
+
+  const pills = [
+    hotel.star_rating !== 'N/A' ? `⭐ ${hotel.star_rating}` : null,
+    hotel.overall_score !== 'N/A' ? `Score: ${hotel.overall_score}` : null,
+    hotel.review_count !== 'N/A' ? `${hotel.review_count} Reviews` : null,
+    hotel.pet_friendly !== 'Unknown' ? `🐾 Pet: ${hotel.pet_friendly}` : null,
+  ].filter(Boolean);
+
+  const pillsHtml = pills.map((p,i) =>
+    `<span class="meta-pill ${i===0?'gold':i===2?'green':''}">${p}</span>`
+  ).join('');
+  document.getElementById('hotel-meta-pills').innerHTML = pillsHtml;
+
+  // Status
+  document.getElementById('s-source').textContent = hotel.source_website || hotel.source_url;
+  document.getElementById('s-reviews').textContent = `${reviews.length} reviews loaded`;
+  document.getElementById('exp-count').textContent = reviews.length + 1;
+
+  // Info grid
+  const fields = [
+    ['Hotel Name',          hotel.hotel_name],
+    ['Star Rating',         hotel.star_rating],
+    ['Overall Score',       hotel.overall_score],
+    ['Total Reviews',       hotel.review_count],
+    ['Full Address',        hotel.address],
+    ['Pet Friendly',        hotel.pet_friendly],
+    ['Hotel Email',         hotel.hotel_email],
+    ['Latitude',            hotel.latitude],
+    ['Longitude',           hotel.longitude],
+    ['Google Maps',         hotel.google_map_link, true],
+    ['Amenities',           hotel.amenities],
+    ['Photo Links',         hotel.photo_links ? hotel.photo_links.split(' | ')[0] + (hotel.photo_links.includes('|') ? ' + more…' : '') : 'N/A'],
+    ['Source Website',      hotel.source_website],
+    ['Source URL',          hotel.source_url, true],
+  ];
+
+  document.getElementById('info-grid').innerHTML = fields.map(([label, val, isLink]) => {
+    const isNA = !val || val === 'N/A' || val === 'Unknown';
+    const display = isNA
+      ? `<span class="na">N/A</span>`
+      : isLink
+        ? `<a href="${val}" target="_blank" rel="noopener">${val.length > 50 ? val.slice(0,50)+'…' : val}</a>`
+        : `<span>${val}</span>`;
+    return `
+      <div class="info-item">
+        <div class="info-label">${label}</div>
+        <div class="info-value">${display}</div>
+      </div>`;
+  }).join('');
+
+  // Reviews table
+  const tbody = document.getElementById('reviews-body');
+  tbody.innerHTML = reviews.map((r, i) => `
+    <tr>
+      <td><span class="row-num">${String(i+1).padStart(2,'0')}</span></td>
+      <td><strong>${esc(r.reviewer_name || 'Anonymous')}</strong></td>
+      <td style="white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:12px;">${esc(r.review_date || 'N/A')}</td>
+      <td><span class="score-badge">${esc(r.review_score || 'N/A')}</span></td>
+      <td><div class="review-text-cell">${esc(r.review_text || '—')}</div></td>
+      <td><span class="source-tag">${esc(r.source_website || 'N/A')}</span></td>
+    </tr>
+  `).join('');
+}
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-details').style.display = name === 'details' ? '' : 'none';
+  document.getElementById('tab-reviews').style.display  = name === 'reviews'  ? '' : 'none';
+}
+
+async function exportData(fmt) {
+  if (!currentData) return;
+  const res = await fetch('/export', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      hotel: currentData.hotel,
+      reviews: currentData.reviews,
+      format: fmt
+    })
+  });
+  const blob = await res.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fmt === 'excel' ? 'hotel_data.xlsx' : 'hotel_data.csv';
+  a.click();
+}
+
+function showError(msg) {
+  document.getElementById('error-msg').textContent = msg;
+  document.getElementById('error-box').style.display = 'flex';
+}
+function hideError() {
+  document.getElementById('error-box').style.display = 'none';
+}
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Allow Enter key
+document.getElementById('url-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') extractData();
+});
+</script>
+</body>
+</html>
